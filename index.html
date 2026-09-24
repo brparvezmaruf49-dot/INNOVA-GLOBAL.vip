@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INNOVA.GLOBAL.VIP - Smart Digital Network</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--gold:#C89E3C;--gold2:#E8C77A;--goldLight:#FFF8E7;--border:#EFEFEF;--dark:#0F1012}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#F7F7F7;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;background:#fff;min-height:100vh;position:relative;padding-bottom:85px;box-shadow:0 0 30px rgba(0,0,0,.06)}
+.header{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(255,255,255,.98);backdrop-filter:blur(10px);z-index:10}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:var(--dark)}.logo span{color:var(--gold)}
+.bg-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;font-weight:800;box-shadow:0 6px 16px rgba(200,158,60,.25)}
+.btn{width:100%;padding:14px;border-radius:14px;border:none;font-weight:800;cursor:pointer;margin-top:10px;font-size:14px}
+.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px;margin-top:12px;box-shadow:0 4px 12px rgba(0,0,0,.03)}
+input{width:100%;padding:13px;background:#F9F9FA;border:1.5px solid var(--border);border-radius:12px;margin-top:8px;outline:none}
+.hidden{display:none!important}
+.avatar{width:62px;height:62px;border-radius:50%;border:3px solid var(--gold);object-fit:cover;cursor:pointer;background:var(--goldLight);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:var(--gold)}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.profile-mini{border:2px solid var(--goldLight);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,#fff,#FFFEF5)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.icon-card{border:1px solid var(--border);border-radius:16px;padding:12px 6px;text-align:center;background:#fff;cursor:pointer}
+.icon-card i{font-size:20px;color:var(--gold);display:block;margin-bottom:4px}
+.icon-card b{font-size:10px}
+.bottom-nav{position:fixed;bottom:0;width:100%;max-width:430px;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:9px 0 12px;z-index:30;border-radius:20px 20px 0 0}
+.bottom-nav div{text-align:center;font-size:10px;color:#888;padding:6px 16px;border-radius:12px;cursor:pointer}
+.bottom-nav div.active{color:var(--gold);background:var(--goldLight);font-weight:800}
+.ad-box{background:linear-gradient(135deg,#0F1012,#2A2A2E);color:#fff;border-radius:16px;padding:18px;text-align:center}
+.badge{font-size:9px;padding:3px 8px;border-radius:20px;background:var(--goldLight);border:1px solid var(--gold2);color:var(--gold);font-weight:700}
+</style>
+</head>
+<body>
+<script>
+const supa = supabase.createClient("https://emnnltbzxzdutnisvzni.supabase.co","sb_publishable_HJLbbhiiukwMjbhNDKfZOw_JyLRXgXj");
+let cur=null, selPkg=null, missionTimer=null;
+
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id=='dashPage') loadDash();
+  if(id=='packagesPage') loadPkgs();
+  if(id=='missionsPage') loadMissions();
+  if(id=='financePage') loadFinance();
+  if(id=='teamPage') loadTeam();
+  if(id=='profilePage') loadProfile();
+  if(id=='adminPage') loadAdmin();
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  let ref=new URLSearchParams(location.search).get('ref'); if(ref) r_ref.value=ref;
+  let saved=localStorage.getItem('cur'); if(saved){cur=JSON.parse(saved); show('dashPage');}
+});
+
+async function register(){
+  let name=r_name.value.trim(), phone=r_phone.value.trim(), pass=r_pass.value.trim(), cpass=r_cpass.value.trim(), ref=r_ref.value.trim()||new URLSearchParams(location.search).get('ref')||"";
+  if(!name||!phone||!pass){alert("সব পূরণ করুন");return;}
+  if(pass!==cpass){alert("Password মিলেনি");return;}
+  reg_btn.disabled=true; reg_btn.innerText="Creating INNOVA ID...";
+  try{
+    let {data:all}=await supa.from('members').select('innova_id');
+    let next=(!all||all.length==0)?"000001":String(all.length+1).padStart(6,'0');
+    let isFirst=next=="000001";
+    let link=location.origin+location.pathname+"?ref="+next;
+    let upline=null; if(ref){ let {data:up}=await supa.from('members').select('innova_id').eq('innova_id',ref).maybeSingle(); if(up) upline=up.innova_id; }
+    let {error}=await supa.from('members').insert([{innova_id:next,name:name,phone:phone,password:pass,referral_id:ref||null,upline_id:upline,referral_link:link,status:isFirst?"ACTIVE":"PENDING",role:isFirst?"admin":"member",joining_date:new Date().toISOString().split('T')[0]}]);
+    if(error) throw error;
+    await supa.from('notifications').insert([{innova_id:next,title:"Registration Successful",message:`INNOVA ID ${next} Created - Payment/Activation শুরু হবে`,type:"REG"}]);
+    alert("✅ INNOVA ID "+next+" Created! Registration সফল - Payment/Activation শুরু হবে"); show('loginPage');
+  }catch(e){alert(e.message);}
+  reg_btn.disabled=false; reg_btn.innerText="CREATE ACCOUNT";
+}
+async function login(){
+  let {data}=await supa.from('members').select('*').eq('phone',l_phone.value.trim()).eq('password',l_pass.value.trim()).maybeSingle();
+  if(!data){alert("Phone/Password ভুল");return;}
+  if(data.status!="ACTIVE"){alert("PENDING - Admin Approve করবে");return;}
+  if(data.package_end && new Date(data.package_end) < new Date()){
+    await supa.from('members').update({is_package_active:false}).eq('innova_id',data.innova_id);
+    data.is_package_active=false;
+  }
+  cur=data; localStorage.setItem('cur',JSON.stringify(data)); show('dashPage');
+}
+async function loadDash(){
+  if(!cur) cur=JSON.parse(localStorage.getItem('cur')||'null'); if(!cur) return;
+  let {data}=await supa.from('members').select('*').eq('innova_id',cur.innova_id).single();
+  if(data){ if(data.package_end && new Date(data.package_end) < new Date()){ await supa.from('members').update({is_package_active:false}).eq('innova_id',cur.innova_id); data.is_package_active=false; } cur=data; localStorage.setItem('cur',JSON.stringify(data)); }
+  d_name.innerText=cur.name; d_id.innerText="INNOVA ID "+cur.innova_id; d_status.innerText=cur.is_package_active?"ACTIVE":"INACTIVE"; d_status.style.color=cur.is_package_active?"#16A34A":"red";
+  if(cur.profile_photo){ d_avatar.innerHTML=`<img src="${cur.profile_photo}">`; } else { d_avatar.innerHTML=cur.name.charAt(0).toUpperCase(); }
+  d_bal.innerText="৳"+(cur.total_balance||0); d_ref_inc.innerText="৳"+(cur.referral_income||0);
+  d_pending.innerText="৳"+(cur.pending_balance||0); d_approved.innerText="৳"+(cur.total_balance||0);
+  d_link.innerText=cur.referral_link;
+  let {data:team}=await supa.from('members').select('innova_id').eq('referral_id',cur.innova_id); d_direct.innerText=team?.length||0;
+  let total=team?.length||0; if(team){ for(let m of team){ let {data:l2}=await supa.from('members').select('innova_id').eq('referral_id',m.innova_id); total+=l2?.length||0; }} d_total_team.innerText=total;
+  if(cur.is_package_active){ let end=new Date(cur.package_end); let diff=Math.ceil((end-new Date())/(1000*60*60*24)); pkgStatusDash.innerText=`Package Active - ${diff} দিন বাকি`; } else { pkgStatusDash.innerText="Package Expired - Renew করুন"; }
+  if(cur.innova_id=="000001") adminBtn.classList.remove('hidden');
+}
+async function loadPkgs(){
+  let {data:pkgs}=await supa.from('packages').select('*').eq('status','ACTIVE').order('price');
+  pkgList.innerHTML=pkgs.map(p=>`<div class="card" style="border-left:4px solid var(--gold)"><div style="display:flex;justify-content:space-between"><b>${p.name} - ৳${p.price}</b><span class="badge">${p.duration_days} Days</span></div><div style="margin-top:8px;font-size:12px">Daily Earning: <b style="color:var(--gold)">৳${p.daily_earning}</b> | 12 Missions | ${p.mission_seconds}s | ${p.duration_days} Days<br><small>প্রতিটি Mission দিনে একবার - বারবার অতিরিক্ত earning না</small></div><button class="btn bg-gold" onclick="openPay(${p.id},${p.price},'${p.name}')">SELECT - ৳${p.price}</button></div>`).join('')+`<p style="font-size:11px;color:gray;text-align:center;margin-top:8px">আরও 5টি Package Admin Panel থেকে যোগ করা যাবে। 15 দিন শেষ হলে Expired হবে, Renewal করতে হবে।</p>`;
+}
+function openPay(id,price,name){ selPkg={id,price,name}; payAmt.innerText=name+" - ৳"+price; payBox.classList.remove('hidden'); show('financePage'); }
+async function submitPay(){ let s=p_sender.value.trim(), t=p_trx.value.trim(); if(!s||!t){alert("Sender & TrxID দিন");return;} await supa.from('payments').insert([{innova_id:cur.innova_id,package_id:selPkg.id,sender_number:s,trx_id:t,amount:selPkg.price,status:"PENDING"}]); await supa.from('notifications').insert([{innova_id:cur.innova_id,title:"Payment Submitted",message:`৳${selPkg.price} - Trx ${t} Submitted`},{innova_id:"000001",title:"New Payment",message:`${cur.innova_id} - ৳${selPkg.price} - ${t}`} ]); alert("✅ Payment Submitted! Approve → Package Automatically Active হবে"); payBox.classList.add('hidden'); }
+async function loadMissions(){
+  if(!cur.is_package_active){ missionList.innerHTML="<div class='card' style='text-align:center;color:red'>Package Expired - Earning বন্ধ - Renew করুন<br><button class='btn bg-gold' onclick=\"show('packagesPage')\">PACKAGES</button></div>"; return; }
+  let today=new Date().toISOString().split('T')[0]; let {data:done}=await supa.from('earnings').select('mission_id').eq('innova_id',cur.innova_id).eq('date',today); let doneIds=done?.map(d=>d.mission_id)||[]; let {data:pkg}=await supa.from('packages').select('*').eq('id',cur.active_package_id).single();
+  let list=""; for(let i=1;i<=12;i++){ let isDone=doneIds.includes(i); let earn=pkg?Math.floor(pkg.daily_earning/12):0; list+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b>Mission ${i}</b><br><small>~20 Sec | ৳${earn} | দিনে 1 বার</small></div><div>${isDone?`<span style="color:green;font-weight:800">✅ Done</span>`:`<button class="btn bg-gold" style="width:auto;padding:8px 14px;margin:0" onclick="startMission(${i},${earn})">START</button>`}</div></div>`; } missionList.innerHTML=list;
+}
+async function startMission(id,earn){
+  if(missionTimer) return; let sec=20;
+  missionModal.classList.remove('hidden'); m_title.innerText="Mission "+id+" - 20 Seconds"; m_sec.innerText=sec+"s"; m_bar.style.width="0%";
+  adViewBox.innerHTML=`<div class="ad-box"><i class="fa fa-bullhorn" style="font-size:28px;color:var(--gold)"></i><br><b>INNOVA.GLOBAL Ad</b><br><small style="color:#aaa">Premium Advertisement - 20 Sec View<br>Support: t.me/+kOclYClnM0NmYzc1</small></div>`;
+  missionTimer=setInterval(async ()=>{ sec--; m_sec.innerText=sec+"s"; m_bar.style.width=((20-sec)/20*100)+"%"; if(sec<=0){ clearInterval(missionTimer); missionTimer=null; missionModal.classList.add('hidden'); try{ let {error}=await supa.from('earnings').insert([{innova_id:cur.innova_id,type:"PACKAGE",amount:earn,mission_id:id,status:"APPROVED"}]); if(error && error.code=='23505'){alert("এই Mission আজ করেছেন! অতিরিক্ত earning হবে না");} else { await supa.from('members').update({total_balance:(cur.total_balance||0)+earn}).eq('innova_id',cur.innova_id); cur.total_balance=(cur.total_balance||0)+earn; localStorage.setItem('cur',JSON.stringify(cur)); await supa.from('notifications').insert([{innova_id:cur.innova_id,title:"Mission Completed",message:`Mission ${id} - ৳${earn} Added`} ]); alert(`✅ Mission ${id} Complete - ৳${earn} Approved & Added`); loadMissions(); loadDash(); } }catch(e){alert(e.message);} } },1000);
+}
+async function loadFinance(){
+  let {data:earns}=await supa.from('earnings').select('*').eq('innova_id',cur.innova_id).order('created_at',{ascending:false}).limit(30);
+  let today=new Date().toISOString().split('T')[0]; let todayEarn=earns?.filter(e=>e.date==today).reduce((s,e)=>s+e.amount,0)||0; let totalEarn=earns?.reduce((s,e)=>s+e.amount,0)||0;
+  f_avail.innerText="৳"+(cur.total_balance||0); f_total.innerText="৳"+totalEarn; f_today.innerText="৳"+todayEarn; f_pkg_inc.innerText="৳"+totalEarn; f_ref_inc.innerText="৳"+(cur.referral_income||0); f_pending.innerText="৳"+(cur.pending_balance||0);
+  f_hist.innerHTML=earns?.map(e=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:11px"><div>${e.type} #${e.mission_id} ${e.date}</div><div style="color:var(--gold);font-weight:700">৳${e.amount} ${e.status}</div></div>`).join('')||"No Transaction - Initial 0";
+}
+async function requestWithdraw(){
+  let amt=parseInt(w_amount.value); if(!amt){alert("Amount দিন");return;}
+  let {data:direct}=await supa.from('members').select('innova_id').eq('referral_id',cur.innova_id);
+  if((direct?.length||0)<10){alert("Minimum 10 valid Direct Partners লাগবে");return;}
+  let hour=new Date().getHours(); // BD 10PM-12AM = 22-24 - For production enforce
+  await supa.from('withdrawals').insert([{innova_id:cur.innova_id,amount:amt,status:"PENDING"}]);
+  await supa.from('notifications').insert([{innova_id:cur.innova_id,title:"Withdraw Request",message:`৳${amt} Pending`},{innova_id:"000001",title:"Withdraw Request",message:`${cur.innova_id} - ৳${amt}`} ]);
+  alert("✅ Withdraw Request Submitted - Status Pending - Window 10PM-12AM");
+}
+async function loadTeam(){
+  let {data:direct}=await supa.from('members').select('*').eq('referral_id',cur.innova_id);
+  teamDirect.innerHTML=direct?.map(m=>`<div class="card" style="font-size:12px"><b style="color:var(--gold)">${m.innova_id}</b> ${m.name} - ${m.status} - ${m.is_package_active?'🟢':''}<br><small>Package: ${m.active_package_id||'None'}</small></div>`).join('')||"No Direct Partners - Real 0";
+  t_direct_count.innerText=direct?.length||0;
+  let total=direct?.length||0; let gen2=0; if(direct){ for(let m of direct){ let {data:l2}=await supa.from('members').select('innova_id').eq('referral_id',m.innova_id); gen2+=l2?.length||0; total+=l2?.length||0; for(let m2 of l2||[]){ let {data:l3}=await supa.from('members').select('innova_id').eq('referral_id',m2.innova_id); total+=l3?.length||0; } } } t_total_team.innerText=total; t_gen2.innerText=gen2;
+}
+async function loadProfile(){
+  p_name.innerText=cur.name; p_id.innerText=cur.innova_id; p_phone.innerText=cur.phone; p_upline.innerText=cur.upline_id||"None"; p_join.innerText=cur.joining_date+" "+new Date(cur.created_at).toLocaleTimeString(); p_status.innerText=cur.is_package_active?"ACTIVE":"INACTIVE"; p_link.innerText=cur.referral_link;
+  if(cur.profile_photo){ p_avatar.innerHTML=`<img src="${cur.profile_photo}">`; d_avatar.innerHTML=`<img src="${cur.profile_photo}">`; } else { p_avatar.innerHTML=cur.name.charAt(0).toUpperCase(); d_avatar.innerHTML=cur.name.charAt(0).toUpperCase(); }
+  p_edit_name.value=cur.name;
+  let {data:direct}=await supa.from('members').select('innova_id').eq('referral_id',cur.innova_id); p_direct.innerText=direct?.length||0;
+  let total=direct?.length||0; if(direct){ for(let m of direct){ let {data:l2}=await supa.from('members').select('innova_id').eq('referral_id',m.innova_id); total+=l2?.length||0; } } p_total_team.innerText=total;
+}
+async function changePic(input){
+  let file=input.files[0]; if(!file) return;
+  let reader=new FileReader(); reader.onload=async (e)=>{ let b64=e.target.result; await supa.from('members').update({profile_photo:b64}).eq('innova_id',cur.innova_id); cur.profile_photo=b64; localStorage.setItem('cur',JSON.stringify(cur)); alert("✅ Profile Photo Updated!"); loadDash(); loadProfile(); }; reader.readAsDataURL(file);
+}
+async function updateName(){ let n=p_edit_name.value.trim(); if(!n){alert("Name দিন");return;} await supa.from('members').update({name:n}).eq('innova_id',cur.innova_id); cur.name=n; localStorage.setItem('cur',JSON.stringify(cur)); alert("✅ Account Name Updated!"); loadDash(); loadProfile(); }
+function copyLink(){ navigator.clipboard.writeText(cur.referral_link); alert("Personal Referral Link Copied!"); }
+function logout(){ localStorage.removeItem('cur'); location.reload(); }
+
+async function loadAdmin(){
+  if(cur.innova_id!=="000001"){alert("Only ID 000001 Admin Permission - RLS Enforced"); show('dashPage'); return;}
+  let {data:members}=await supa.from('members').select('*').order('id');
+  let {data:pays}=await supa.from('payments').select('*').eq('status','PENDING');
+  let {data:pkgs}=await supa.from('packages').select('*');
+  let {data:wds}=await supa.from('withdrawals').select('*').eq('status','PENDING');
+  let {data:notifs}=await supa.from('notifications').select('*').order('created_at',{ascending:false}).limit(20);
+  adminStats.innerHTML=`<div class="grid2"><div class="card" style="text-align:center"><b style="color:var(--gold)">${members.length}</b><br><small>Members - Real</small></div><div class="card" style="text-align:center"><b>${members.filter(m=>m.is_package_active).length}</b><br><small>Active - Real</small></div><div class="card" style="text-align:center"><b>${pays.length}</b><br><small>Payments</small></div><div class="card" style="text-align:center"><b>${wds.length}</b><br><small>Withdraws</small></div></div>`;
+  adminNotifs.innerHTML=notifs.map(n=>`<div style="padding:8px;border-left:3px solid var(--gold);background:var(--goldLight);border-radius:8px;margin-top:6px;font-size:11px"><b>${n.title}</b> - ${n.innova_id}<br>${n.message}<br><small>${new Date(n.created_at).toLocaleString()}</small></div>`).join('')||"No Notifications - Initial 0";
+  adminMembers.innerHTML=members.map(m=>`<div class="card" style="display:flex;justify-content:space-between;font-size:11px"><div><b style="color:var(--gold)">${m.innova_id}</b> ${m.name}<br>${m.phone} • Ref:${m.referral_id||'None'} • ${m.status} • ${m.is_package_active?'🟢 Active':'🔴 Expired'}</div><div>${m.status=='PENDING'?`<button onclick="approveMem('${m.innova_id}')" class="btn bg-gold" style="width:auto;padding:6px 10px;margin:0">APPROVE</button>`:'OK'}</div></div>`).join('');
+  adminPays.innerHTML=pays.map(p=>`<div class="card" style="border-color:var(--gold)"><b>${p.innova_id}</b> - ৳${p.amount}<br>Sender:${p.sender_number} | Trx:${p.trx_id}<br><button onclick="approvePay(${p.id},'${p.innova_id}',${p.package_id})" class="btn bg-gold" style="padding:8px">APPROVE → Auto Active 15 Days</button></div>`).join('')||"No Pending Payments - Real 0";
+  adminWds.innerHTML=wds.map(w=>`<div class="card"><b>${w.innova_id}</b> - ৳${w.amount}<br><button onclick="approveWd(${w.id})" class="btn bg-gold" style="width:auto;padding:6px 10px;margin:0">APPROVED</button> <button onclick="rejectWd(${w.id})" class="btn" style="width:auto;padding:6px 10px;margin:0;background:#eee">REJECTED</button></div>`).join('')||"No Withdraw - Real 0";
+  adminPkgs.innerHTML=pkgs.map(p=>`<div class="card"><b>${p.name}</b> ৳${p.price} Daily ৳${p.daily_earning} ${p.missions_per_day} Missions ${p.mission_seconds}s<br><div class="grid2"><input id="price_${p.id}" value="${p.price}" placeholder="Price"><input id="earn_${p.id}" value="${p.daily_earning}" placeholder="Daily"><input id="miss_${p.id}" value="${p.missions_per_day}"><input id="sec_${p.id}" value="${p.mission_seconds}"></div><button onclick="updatePkg(${p.id})" class="btn bg-gold" style="padding:8px">UPDATE PACKAGE</button></div>`).join('')+`<div class="card"><b>Add New Package - আরও 5 টা যোগ করা যাবে</b><input id="new_name" placeholder="Name e.g. PACKAGE 500"><input id="new_price" placeholder="Price"><input id="new_earn" placeholder="Daily Earning"><button onclick="addPkg()" class="btn bg-gold">ADD PACKAGE</button></div>`;
+}
+async function approveMem(id){ await supa.from('members').update({status:"ACTIVE"}).eq('innova_id',id); await supa.from('notifications').insert([{innova_id:id,title:"Approved",message:"Account Approved - Activate Package"}]); alert(id+" Approved"); loadAdmin(); }
+async function approvePay(pid,iid,pkgId){ let s=new Date(); let e=new Date(); e.setDate(s.getDate()+15); await supa.from('payments').update({status:"APPROVED"}).eq('id',pid); await supa.from('members').update({status:"ACTIVE",active_package_id:pkgId,package_start:s.toISOString(),package_end:e.toISOString(),is_package_active:true}).eq('innova_id',iid); await supa.from('notifications').insert([{innova_id:iid,title:"Package Activated",message:`Package Active till ${e.toLocaleDateString()} - 15 Days`} ]); alert(iid+" 15 Days Active!"); loadAdmin(); }
+async function approveWd(id){ await supa.from('withdrawals').update({status:"APPROVED"}).eq('id',id); alert("Withdraw Approved"); loadAdmin(); }
+async function rejectWd(id){ await supa.from('withdrawals').update({status:"REJECTED"}).eq('id',id); alert("Rejected"); loadAdmin(); }
+async function updatePkg(id){ let p=document.getElementById('price_'+id).value; let er=document.getElementById('earn_'+id).value; let ms=document.getElementById('miss_'+id).value; let sc=document.getElementById('sec_'+id).value; await supa.from('packages').update({price:parseInt(p),daily_earning:parseInt(er),missions_per_day:parseInt(ms),mission_seconds:parseInt(sc)}).eq('id',id); alert("Package Updated!"); loadAdmin(); }
+async function addPkg(){ let n=new_name.value, pr=parseInt(new_price.value), er=parseInt(new_earn.value); if(!n||!pr){alert("Name & Price দিন");return;} await supa.from('packages').insert([{name:n,price:pr,daily_earning:er||50}]); alert("New Package Added!"); loadAdmin(); }
+</script>
+
+<!-- 1. LOGIN PAGE -->
+<div id="loginPage" class="app page">
+  <div style="padding:44px 20px 18px;text-align:center">
+    <h1 class="logo">INNOVA.<span>GLOBAL.VIP</span></h1>
+    <p style="font-size:10px;color:var(--gold);letter-spacing:3px;font-weight:800;margin-top:6px">CONNECT • LEARN • GROW</p>
+    <div style="margin-top:16px;display:inline-block;background:var(--goldLight);border:1px solid var(--gold2);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+  </div>
+  <div style="padding:0 20px">
+    <div class="card" style="border-top:3px solid var(--gold)">
+      <h3 style="text-align:center;font-weight:900;letter-spacing:1px">LOGIN</h3>
+      <p style="text-align:center;font-size:11px;color:gray;margin-top:4px">Smart Digital Network Platform</p>
+      <input id="l_phone" placeholder="📱 Phone Number">
+      <input id="l_pass" type="password" placeholder="🔒 Password">
+      <button class="btn bg-gold" onclick="login()">LOGIN</button>
+      <p style="text-align:center;margin-top:12px;font-size:13px">No Account? <b style="color:var(--gold);cursor:pointer" onclick="show('registerPage')">Create Account</b></p>
+    </div>
+    <div style="display:flex;justify-content:center;gap:10px;margin-top:16px">
+      <a href="https://t.me/+kOclYClnM0NmYzc1" target="_blank" style="background:#229ED9;color:#fff;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none"><i class="fab fa-telegram"></i></a>
+      <a href="https://t.me/powrnetwork7xofflcialgroup" target="_blank" style="background:var(--gold);color:#111;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none"><i class="fa fa-users"></i></a>
+      <a href="https://www.youtube.com/@PowerNetwork7X" target="_blank" style="background:#FF0000;color:#fff;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;text-decoration:none"><i class="fab fa-youtube"></i></a>
+    </div>
+    <p style="text-align:center;font-size:10px;color:#aaa;margin-top:16px">© 2026 INNOVA.GLOBAL<br>CONNECT • LEARN • GROW</p>
+  </div>
+</div>
+
+<!-- 2. REGISTRATION -->
+<div id="registerPage" class="app page hidden">
+  <div class="header"><div onclick="show('loginPage')"><i class="fa fa-arrow-left"></i></div><b>Registration</b><div></div></div>
+  <div style="padding:20px"><div class="card" style="border-top:3px solid var(--gold)"><h3>Registration</h3><p style="font-size:11px;color:gray;margin-top:4px">Registration সফল হলে Payment/Activation process শুরু হবে</p><input id="r_name" placeholder="👤 Full Name *"><input id="r_phone" placeholder="📱 Phone Number *"><input id="r_pass" type="password" placeholder="🔒 Password *"><input id="r_cpass" type="password" placeholder="🔒 Confirm Password *"><input id="r_ref" placeholder="🔗 Referral ID" style="background:var(--goldLight);border-color:var(--gold2)"><button id="reg_btn" class="btn bg-gold" onclick="register()">CREATE ACCOUNT</button></div></div>
+</div>
+
+<!-- 4. DASHBOARD -->
+<div id="dashPage" class="app page hidden">
+  <div class="header"><div><i class="fa fa-bars"></i></div><div class="logo" style="font-size:15px">INNOVA.<span>GLOBAL.VIP</span></div><div><i class="fa fa-bell"></i></div></div>
+  <div style="padding:16px">
+    <div class="profile-mini">
+      <label for="picDash" style="cursor:pointer"><div class="avatar" id="d_avatar">I</div><input type="file" id="picDash" accept="image/*" style="display:none" onchange="changePic(this)"></label>
+      <div><b id="d_name" style="font-size:15px">--</b><br><span id="d_id" style="font-size:11px;color:var(--gold)">--</span><br><span id="d_status" style="font-size:11px;font-weight:800">ACTIVE</span><br><small id="pkgStatusDash" style="font-size:10px;color:gray"></small><div style="font-size:9px;color:var(--gold);margin-top:2px">● গোল ছবিতে Click করে Pic লাগান</div></div>
+    </div>
+    <div class="grid2" style="margin-top:12px"><div class="card" style="background:var(--goldLight);border-color:var(--gold2)"><p style="font-size:9px">TOTAL MAIN BALANCE</p><b id="d_bal">৳0</b><p style="font-size:9px;margin-top:4px">PENDING: <span id="d_pending">৳0</span> | APPROVED: <span id="d_approved">৳0</span></p></div><div class="card"><p style="font-size:9px">REFERRAL INCOME</p><b id="d_ref_inc">৳0</b><p style="font-size:9px;margin-top:4px">Direct: <span id="d_direct">0</span> | Total: <span id="d_total_team">0</span></p></div></div>
+    <div class="grid2"><button class="btn" style="background:#111;color:var(--gold2);border:1px solid var(--gold)" onclick="show('financePage')">ADD FUND</button><button class="btn" style="background:#fff;border:1px solid var(--border)" onclick="show('financePage')">CASH OUT</button></div>
+    <p style="font-weight:800;margin-top:14px;font-size:12px">SITE OPTIONS</p>
+    <div class="grid4" style="margin-top:10px">
+      <div class="icon-card" onclick="show('dashPage')"><i class="fa fa-house"></i><b>Home</b></div>
+      <div class="icon-card" onclick="show('missionsPage')"><i class="fa fa-bullseye"></i><b>Missions</b></div>
+      <div class="icon-card" onclick="show('packagesPage')"><i class="fa fa-box"></i><b>Packages</b></div>
+      <div class="icon-card" onclick="show('financePage')"><i class="fa fa-wallet"></i><b>Finance</b></div>
+      <div class="icon-card" onclick="show('teamPage')"><i class="fa fa-users"></i><b>My Team</b></div>
+      <div class="icon-card" onclick="show('financePage')"><i class="fa fa-hand-holding-dollar"></i><b>Withdraw</b></div>
+      <div class="icon-card" onclick="copyLink()"><i class="fa fa-link"></i><b>Referral</b></div>
+      <div class="icon-card" onclick="show('profilePage')"><i class="fa fa-user"></i><b>Profile</b></div>
+    </div>
+    <div class="card"><p style="font-size:11px;font-weight:700">Personal Referral Link - 3 Generation Max</p><p id="d_link" style="font-size:10px;background:#F9F9F9;padding:8px;border-radius:8px;margin-top:6px;word-break:break-all">--</p><button class="btn bg-gold" style="padding:10px" onclick="copyLink()">COPY LINK</button></div>
+    <div id="adminBtn" class="hidden"><button class="btn" style="background:#111;color:var(--gold);border:2px solid var(--gold)" onclick="show('adminPage')">🛡️ ADMIN PANEL - ID 000001</button></div>
+    <p style="text-align:center;font-size:10px;color:#aaa;margin-top:16px">© 2026 INNOVA.GLOBAL<br>CONNECT • LEARN • GROW</p>
+  </div>
+  <div class="bottom-nav"><div class="active"><i class="fa fa-house" style="display:block;font-size:16px"></i>Home</div><div onclick="show('missionsPage')"><i class="fa fa-bullseye" style="display:block;font-size:16px"></i>Missions</div><div onclick="show('financePage')"><i class="fa fa-wallet" style="display:block;font-size:16px"></i>Finance</div><div onclick="show('profilePage')"><i class="fa fa-user" style="display:block;font-size:16px"></i>Profile</div></div>
+</div>
+
+<!-- PACKAGES -->
+<div id="packagesPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>Packages - 15 Days</b><div></div></div><div style="padding:16px"><div id="pkgList"></div></div></div>
+
+<!-- MISSIONS -->
+<div id="missionsPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>Missions - 12 Daily - 20 Sec</b><div></div></div><div style="padding:16px"><div id="missionList"></div></div>
+<div id="missionModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px"><div class="card" style="width:100%;max-width:360px;text-align:center"><h3 id="m_title">Mission</h3><div id="adViewBox" style="margin-top:10px"></div><h1 id="m_sec" style="font-size:42px;color:var(--gold);margin:10px 0">20s</h1><div style="width:100%;height:8px;background:#eee;border-radius:10px;overflow:hidden"><div id="m_bar" style="height:100%;width:0%;background:var(--gold)"></div></div></div></div>
+</div>
+
+<!-- FINANCE -->
+<div id="financePage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>Finance</b><div></div></div><div style="padding:16px"><div id="payBox" class="card hidden" style="border:2px solid var(--gold)"><h4 id="payAmt" style="text-align:center">--</h4><div style="text-align:center;background:var(--goldLight);padding:12px;border-radius:12px;margin-top:8px"><p style="font-size:11px">Official Payment - bKash Personal</p><b style="font-size:22px;color:var(--gold)">01313213083</b><p style="font-size:10px">Screenshot পরে Add হবে</p></div><input id="p_sender" placeholder="Sender Number"><input id="p_trx" placeholder="Transaction ID"><button class="btn bg-gold" onclick="submitPay()">SUBMIT PAYMENT</button></div><div class="grid2"><div class="card"><p style="font-size:9px">Available Balance</p><b id="f_avail">৳0</b></div><div class="card"><p style="font-size:9px">Today's Earning</p><b id="f_today">৳0</b></div><div class="card"><p style="font-size:9px">Total Earning</p><b id="f_total">৳0</b></div><div class="card"><p style="font-size:9px">Package Income</p><b id="f_pkg_inc">৳0</b></div><div class="card"><p style="font-size:9px">Referral Income</p><b id="f_ref_inc">৳0</b></div><div class="card"><p style="font-size:9px">Pending</p><b id="f_pending">৳0</b></div></div><div class="card"><p style="font-weight:700">Withdraw - 10 Direct - 10PM-12AM</p><input id="w_amount" placeholder="Amount"><button class="btn bg-gold" onclick="requestWithdraw()">REQUEST WITHDRAW</button><p style="font-size:10px;color:gray">Status: Pending / Approved / Rejected</p></div><div class="card"><b>Transaction History</b><div id="f_hist" style="margin-top:8px"></div></div></div></div>
+
+<!-- TEAM -->
+<div id="teamPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>My Team - 3 Gen Max</b><div></div></div><div style="padding:16px"><div class="grid2"><div class="card" style="text-align:center"><b id="t_direct_count">0</b><br><small>Direct</small></div><div class="card" style="text-align:center"><b id="t_total_team">0</b><br><small>Total Team</small></div></div><p style="font-size:11px;color:gray;margin-top:8px">Gen2: <span id="t_gen2">0</span> | No Matching/Rank Income - Only Package/Mission + Referral</p><div id="teamDirect" style="margin-top:10px"></div></div></div>
+
+<!-- PROFILE -->
+<div id="profilePage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>Profile - Professional</b><div></div></div><div style="padding:16px"><div style="text-align:center"><label for="picProfile" style="cursor:pointer"><div class="avatar" id="p_avatar" style="width:90px;height:90px;font-size:32px;margin:0 auto">I</div><p style="font-size:11px;color:var(--gold);margin-top:6px"><i class="fa fa-camera"></i> Click করে Pic লাগান</p></label><input type="file" id="picProfile" accept="image/*" style="display:none" onchange="changePic(this)"><h3 id="p_name" style="margin-top:10px">--</h3><p id="p_id" style="color:var(--gold);font-weight:700">--</p><p id="p_status" style="font-size:12px;font-weight:800;color:green">ACTIVE</p></div><div class="card"><p style="font-size:12px">Referral Link</p><p id="p_link" style="font-size:10px;background:#F9F9F9;padding:8px;border-radius:8px;margin-top:6px;word-break:break-all">--</p><button class="btn bg-gold" style="padding:10px" onclick="copyLink()">COPY LINK</button></div><div class="card" style="font-size:12px"><p>Upline ID: <b id="p_upline">--</b></p><p>Joining Date: <b id="p_join">--</b></p><p>Direct: <b id="p_direct">0</b> | Total Team: <b id="p_total_team">0</b></p><p>Account Status: <b id="p_status">--</b></p></div><div class="card"><p style="font-size:12px;font-weight:700">Settings - Edit Profile</p><input id="p_edit_name" placeholder="Edit Account Name"><button class="btn bg-gold" style="padding:10px" onclick="updateName()">UPDATE NAME</button><p style="font-size:11px;color:gray;margin-top:6px">Edit Profile Picture - উপরের গোল ছবিতে Click করুন</p></div><div style="text-align:center;margin-top:12px"><a href="https://t.me/+kOclYClnM0NmYzc1" target="_blank" style="background:#229ED9;color:#fff;padding:10px 16px;border-radius:20px;text-decoration:none;font-size:12px"><i class="fab fa-telegram"></i> Group</a> <a href="https://t.me/parvez7xtm" target="_blank" style="background:#111;color:var(--gold);padding:10px 16px;border-radius:20px;text-decoration:none;font-size:12px;margin-left:6px"><i class="fab fa-telegram"></i> Contact</a></div><button class="btn" style="background:#111;color:#fff;margin-top:14px" onclick="logout()">LOGOUT</button><p style="text-align:center;font-size:10px;color:#aaa;margin-top:14px">© 2026 INNOVA.GLOBAL<br>CONNECT • LEARN • GROW</p></div></div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>ADMIN 000001 - RLS Secure</b><div></div></div><div style="padding:16px"><div id="adminStats"></div><p style="font-weight:800;margin-top:12px">🔔 Notifications - Registration / Payment / Activation / Expiry / Withdraw</p><div id="adminNotifs"></div><p style="font-weight:800;margin-top:12px">💰 Payment Requests - Approve → Auto Active</p><div id="adminPays"></div><p style="font-weight:800;margin-top:12px">💸 Withdraw Requests - 10PM-12AM</p><div id="adminWds"></div><p style="font-weight:800;margin-top:12px">📦 Package Management - Add 5 More</p><div id="adminPkgs"></div><p style="font-weight:800;margin-top:12px">👥 Members - Real Data</p><div id="adminMembers"></div></div></div>
+
+</div>
+</body>
+</html>
