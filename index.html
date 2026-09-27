@@ -237,84 +237,9 @@ async function addPkg(){ let n=new_name.value, pr=parseInt(new_price.value), er=
 <div id="missionModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px"><div class="card" style="width:100%;max-width:360px;text-align:center"><h3 id="m_title">Mission</h3><div id="adViewBox" style="margin-top:10px"></div><h1 id="m_sec" style="font-size:42px;color:var(--gold);margin:10px 0">20s</h1><div style="width:100%;height:8px;background:#eee;border-radius:10px;overflow:hidden"><div id="m_bar" style="height:100%;width:0%;background:var(--gold)"></div></div></div></div>
 </div>
 
-<!-- FINANCE - BOSS FIXED WITH COPY -->
-<div id="financePage" class="app page hidden">
-  <div class="header">
-    <div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div>
-    <b>Finance</b>
-    <div></div>
-  </div>
-  <div style="padding:16px">
-    <div id="payBox" class="card hidden" style="border:2px solid var(--gold)">
-      <h4 id="payAmt" style="text-align:center">--</h4>
-      <div style="text-align:center;background:var(--goldLight);padding:12px;border-radius:12px;margin-top:8px">
-        <p style="font-size:11px">Official Payment - bKash Personal</p>
-        
-        <!-- ===== NUMBER COPY FIX - BOSS ===== -->
-        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin:8px 0;">
-          <b style="font-size:22px;color:var(--gold)" id="officialNumber">01313213083</b>
-          <button onclick="copyFinanceNumber()" style="background:var(--gold); color:white; border:none; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:bold; cursor:pointer;">📋 Copy</button>
-        </div>
-        <!-- ===== END COPY FIX ===== -->
-        
-        <p style="font-size:10px">Screenshot পরে Add হবে</p>
-      </div>
-      <input id="p_sender" placeholder="Sender Number">
-      <input id="p_trx" placeholder="Transaction ID">
-      <button class="btn bg-gold" onclick="submitPay()">SUBMIT PAYMENT</button>
-    </div>
+<!-- FINANCE -->
+<div id="financePage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>Finance</b><div></div></div><div style="padding:16px"><div id="payBox" class="card hidden" style="border:2px solid var(--gold)"><h4 id="payAmt" style="text-align:center">--</h4><div style="text-align:center;background:var(--goldLight);padding:12px;border-radius:12px;margin-top:8px"><p style="font-size:11px">Official Payment - bKash Personal</p><b style="font-size:22px;color:var(--gold)">01313213083</b><p style="font-size:10px">Screenshot পরে Add হবে</p></div><input id="p_sender" placeholder="Sender Number"><input id="p_trx" placeholder="Transaction ID"><button class="btn bg-gold" onclick="submitPay()">SUBMIT PAYMENT</button></div><div class="grid2"><div class="card"><p style="font-size:9px">Available Balance</p><b id="f_avail">৳0</b></div><div class="card"><p style="font-size:9px">Today's Earning</p><b id="f_today">৳0</b></div><div class="card"><p style="font-size:9px">Total Earning</p><b id="f_total">৳0</b></div><div class="card"><p style="font-size:9px">Package Income</p><b id="f_pkg_inc">৳0</b></div><div class="card"><p style="font-size:9px">Referral Income</p><b id="f_ref_inc">৳0</b></div><div class="card"><p style="font-size:9px">Pending</p><b id="f_pending">৳0</b></div></div><div class="card"><p style="font-weight:700">Withdraw - 10 Direct - 10PM-12AM</p><input id="w_amount" placeholder="Amount"><button class="btn bg-gold" onclick="requestWithdraw()">REQUEST WITHDRAW</button><p style="font-size:10px;color:gray">Status: Pending / Approved / Rejected</p></div><div class="card"><b>Transaction History</b><div id="f_hist" style="margin-top:8px"></div></div></div></div>
 
-    <div class="grid2">
-      <div class="card"><p style="font-size:9px">Available Balance</p><b id="f_avail">৳0</b></div>
-      <div class="card"><p style="font-size:9px">Today's Earning</p><b id="f_today">৳0</b></div>
-      <div class="card"><p style="font-size:9px">Total Earning</p><b id="f_total">৳0</b></div>
-      <div class="card"><p style="font-size:9px">Package Income</p><b id="f_pkg_inc">৳0</b></div>
-      <div class="card"><p style="font-size:9px">Referral Income</p><b id="f_ref_inc">৳0</b></div>
-      <div class="card"><p style="font-size:9px">Pending</p><b id="f_pending">৳0</b></div>
-    </div>
-
-    <div class="card">
-      <p style="font-weight:700">Withdraw - 10 Direct - 10PM-12AM</p>
-      <input id="w_amount" placeholder="Amount">
-      <button class="btn bg-gold" onclick="requestWithdraw()">REQUEST WITHDRAW</button>
-      <p style="font-size:10px;color:gray">Status: Pending / Approved / Rejected</p>
-    </div>
-
-    <div class="card">
-      <b>Transaction History</b>
-      <div id="f_hist" style="margin-top:8px"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-// FINANCE NUMBER COPY - 100% Working
-function copyFinanceNumber(){
-  var num = "01313213083"; // তোমার Number
-  var temp = document.createElement("input");
-  temp.value = num;
-  document.body.appendChild(temp);
-  temp.select();
-  temp.setSelectionRange(0, 99999);
-  document.execCommand("copy");
-  document.body.removeChild(temp);
-  
-  // Button Animation
-  var btn = event.target;
-  btn.innerText = "✅ Copied!";
-  btn.style.background = "#00A651";
-  setTimeout(function(){
-    btn.innerText = "📋 Copy";
-    btn.style.background = "var(--gold)";
-  }, 2000);
-  
-  // Toast
-  var t = document.createElement("div");
-  t.innerHTML = "✅ Copied: 01313213083";
-  t.style.cssText = "position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#000; color:#fff; padding:10px 20px; border-radius:25px; z-index:9999; font-size:14px;";
-  document.body.appendChild(t);
-  setTimeout(function(){ t.remove(); }, 2500);
-}
 <!-- TEAM -->
 <div id="teamPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>My Team - 3 Gen Max</b><div></div></div><div style="padding:16px"><div class="grid2"><div class="card" style="text-align:center"><b id="t_direct_count">0</b><br><small>Direct</small></div><div class="card" style="text-align:center"><b id="t_total_team">0</b><br><small>Total Team</small></div></div><p style="font-size:11px;color:gray;margin-top:8px">Gen2: <span id="t_gen2">0</span> | No Matching/Rank Income - Only Package/Mission + Referral</p><div id="teamDirect" style="margin-top:10px"></div></div></div>
 
