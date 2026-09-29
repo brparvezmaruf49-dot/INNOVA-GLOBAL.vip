@@ -338,26 +338,32 @@ async function addPkg(){ let n=new_name.value, pr=parseInt(new_price.value), er=
 
 <!-- ADMIN PANEL -->
 <div id="adminPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>ADMIN 000001 - RLS Secure</b><div></div></div><div style="padding:16px"><div id="adminStats"></div><p style="font-weight:800;margin-top:12px">🔔 Notifications - Registration / Payment / Activation / Expiry / Withdraw</p><div id="adminNotifs"></div><p style="font-weight:800;margin-top:12px">💰 Payment Requests - Approve → Auto Active</p><div id="adminPays"></div><p style="font-weight:800;margin-top:12px">💸 Withdraw Requests - 10PM-12AM</p><div id="adminWds"></div><p style="font-weight:800;margin-top:12px">📦 Package Management - Add 5 More</p><div id="adminPkgs"></div><p style="font-weight:800;margin-top:12px">👥 Members - Real Data</p><div id="adminMembers"></div></div></div>
-</div> <!-- ADMIN END -->
+function logout(){...}
 
-<script>
 async function confirmPayment(){
-  let sender=document.getElementById('p_sender').value.trim();
-  let trx=document.getElementById('p_trx').value.trim();
+  let sender = document.getElementById('p_sender').value.trim();
+  let trx = document.getElementById('p_trx').value.trim();
   if(!sender||!trx){alert("Sender + TrxID দাও");return;}
-  let innovaId=localStorage.getItem('pendingInnovaId');
-  let pkg=parseInt(localStorage.getItem('pendingPkg'));
-  if(!innovaId){ alert("Login করে আসো"); return; }
+  let innovaId = localStorage.getItem('pendingInnovaId');
+  let pkg = parseInt(localStorage.getItem('pendingPkg')) || 250;
+  if(!innovaId){
+    let phone = localStorage.getItem('currentPhone');
+    let {data} = await supa.from('members').select('innova_id').eq('phone',phone).single();
+    innovaId = data?.innova_id;
+  }
+  if(!innovaId){ alert("আবার Login করো"); return; }
+  
   await supa.from('members').update({package_active:true,status:"ACTIVE"}).eq('innova_id',innovaId);
-  let {data:me}=await supa.from('members').select('*').eq('innova_id',innovaId).single();
-  if(me.upline_id){
+  let {data:me} = await supa.from('members').select('*').eq('innova_id',innovaId).single();
+  
+  if(me?.upline_id){
     let {data:g1}=await supa.from('members').select('*').eq('innova_id',me.upline_id).single();
     if(g1) await supa.from('members').update({balance:(g1.balance||0)+(pkg*0.20)}).eq('innova_id',g1.innova_id);
-    if(me.gen2!="none"){
+    if(me.gen2 && me.gen2!="none"){
       let {data:g2}=await supa.from('members').select('*').eq('innova_id',me.gen2).single();
       if(g2) await supa.from('members').update({balance:(g2.balance||0)+(pkg*0.10)}).eq('innova_id',g2.innova_id);
     }
-    if(me.gen3!="none"){
+    if(me.gen3 && me.gen3!="none"){
       let {data:g3}=await supa.from('members').select('*').eq('innova_id',me.gen3).single();
       if(g3) await supa.from('members').update({balance:(g3.balance||0)+(pkg*0.05)}).eq('innova_id',g3.innova_id);
     }
@@ -365,6 +371,7 @@ async function confirmPayment(){
   alert("✅ Payment Active! Refer Bonus Done!");
   show('dashPage');
 }
+
 </script>
 </body>
 </html>
