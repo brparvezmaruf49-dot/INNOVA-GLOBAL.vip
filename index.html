@@ -338,7 +338,6 @@ async function addPkg(){ let n=new_name.value, pr=parseInt(new_price.value), er=
 
 <!-- ADMIN PANEL -->
 <div id="adminPage" class="app page hidden"><div class="header"><div onclick="show('dashPage')"><i class="fa fa-arrow-left"></i></div><b>ADMIN 000001 - RLS Secure</b><div></div></div><div style="padding:16px"><div id="adminStats"></div><p style="font-weight:800;margin-top:12px">🔔 Notifications - Registration / Payment / Activation / Expiry / Withdraw</p><div id="adminNotifs"></div><p style="font-weight:800;margin-top:12px">💰 Payment Requests - Approve → Auto Active</p><div id="adminPays"></div><p style="font-weight:800;margin-top:12px">💸 Withdraw Requests - 10PM-12AM</p><div id="adminWds"></div><p style="font-weight:800;margin-top:12px">📦 Package Management - Add 5 More</p><div id="adminPkgs"></div><p style="font-weight:800;margin-top:12px">👥 Members - Real Data</p><div id="adminMembers"></div></div></div>
-function logout(){...}
 
 async function confirmPayment(){
   let sender = document.getElementById('p_sender').value.trim();
